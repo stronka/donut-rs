@@ -28,6 +28,28 @@ impl<T, const N: usize, const M: usize> Matrix<T, N, M>
             None
         }
     }
+
+    pub fn set(&mut self, i: usize, j: usize, value: T) {
+        self.data[i][j] = value;
+    }
+
+    pub fn dot<const K: usize>(&self, other: &Matrix<T, M, K>) -> Matrix<T, N, K> {
+        let mut result: Matrix<T, N, K> = Matrix::zeros();
+
+        for l in 0..N {
+            for k in 0..K {
+                let mut sum: T = Default::default();
+
+                for j in 0..M {
+                    sum += self.data[l][j] * other.data[j][k];
+                }
+
+                result.set(l, k, sum);
+            }
+        }
+
+        result
+    }
 }
 
 
@@ -182,6 +204,38 @@ mod test {
 
         assert_eq!(result.at(0).unwrap(), v.dot(&Vector::new([1, 3, 5])));
         assert_eq!(result.at(1).unwrap(), v.dot(&Vector::new([2, 4, 6])));
+    }
+
+    #[test]
+    fn matrix_dot_always_return_proper_dot_product() {
+        let m1: Matrix<i32, 2, 3> = Matrix::new([
+            [1, 2, 3],
+            [4, 5, 6]
+        ]);
+        let m2: Matrix<i32, 3, 2> = Matrix::new([
+            [1, 2],
+            [3, 4],
+            [5, 6]
+        ]);
+
+        let result: Matrix<i32, 2, 2> = m1.dot(&m2);
+
+        assert_eq!(
+            result.at(0, 0).unwrap(),
+            Vector::new([1, 2, 3]).dot(&Vector::new([1, 3, 5]))
+        );
+        assert_eq!(
+            result.at(0, 1).unwrap(),
+            Vector::new([1, 2, 3]).dot(&Vector::new([2, 4, 6]))
+        );
+        assert_eq!(
+            result.at(1, 0).unwrap(),
+            Vector::new([4, 5, 6]).dot(&Vector::new([1, 3, 5]))
+        );
+        assert_eq!(
+            result.at(1, 1).unwrap(),
+            Vector::new([4, 5, 6]).dot(&Vector::new([2, 4, 6]))
+        );
     }
 }
 
