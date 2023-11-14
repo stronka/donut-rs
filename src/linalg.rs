@@ -1,9 +1,35 @@
 use std::ops::{AddAssign, Mul};
 
+pub struct Matrix<T, const N: usize, const M: usize> {
+    data: [[T; M]; N],
+}
+
 pub struct Vector<T, const N: usize>
 {
     data: [T; N],
 }
+
+
+impl<T, const N: usize, const M: usize> Matrix<T, N, M>
+    where T: Copy + Default + AddAssign + Mul<Output=T>
+{
+    pub fn zeros() -> Self {
+        Matrix { data: [[Default::default(); M]; N] }
+    }
+
+    pub fn new(data: [[T; M]; N]) -> Self {
+        Matrix { data }
+    }
+
+    pub fn at(&self, i: usize, j: usize) -> Option<T> {
+        if i < N && j < M {
+            Some(self.data[i][j])
+        } else {
+            None
+        }
+    }
+}
+
 
 impl<T, const N: usize> Vector<T, N>
     where
@@ -25,6 +51,10 @@ impl<T, const N: usize> Vector<T, N>
         }
     }
 
+    pub fn set(&mut self, i: usize, value: T) {
+        self.data[i] = value;
+    }
+
     pub fn size(&self) -> usize {
         N
     }
@@ -34,6 +64,23 @@ impl<T, const N: usize> Vector<T, N>
 
         for (x, y) in self.data.iter().zip(other.data.iter()) {
             result += (*x) * (*y);
+        }
+
+        result
+    }
+
+
+    pub fn mdot<const M: usize>(&self, other: &Matrix<T, N, M>) -> Vector<T, M> {
+        let mut result: Vector<T, M> = Vector::zeros();
+
+        for j in 0..M {
+            let mut sum: T = Default::default();
+
+            for i in 0..N {
+                sum += self.data[i] * other.data[i][j];
+            }
+
+            result.set(j, sum);
         }
 
         result
@@ -79,7 +126,7 @@ mod test {
     }
 
     #[test]
-    fn dot_case_zeros_vectors_then_return_zero() {
+    fn vector_dot_case_zeros_vectors_then_return_zero() {
         let v1: Vector<i32, 3> = Vector::zeros();
         let v2: Vector<i32, 3> = Vector::zeros();
 
@@ -88,7 +135,7 @@ mod test {
     }
 
     #[test]
-    fn dot_case_one_vector_is_zero_then_return_zero() {
+    fn vector_dot_case_one_vector_is_zero_then_return_zero() {
         let v1: Vector<i32, 3> = Vector::new([0, 1, 2]);
         let v2: Vector<i32, 3> = Vector::zeros();
 
@@ -96,11 +143,45 @@ mod test {
     }
 
     #[test]
-    fn dot_case_non_zero_vectors_then_return_value() {
+    fn vector_dot_case_non_zero_vectors_then_return_value() {
         let v1: Vector<i32, 3> = Vector::new([0, 1, 2]);
         let v2: Vector<i32, 3> = Vector::new([0, 1, 2]);
 
         assert_eq!(v1.dot(&v2), 5);
+    }
+
+    #[test]
+    fn matrix_at_case_index_within_bounds_then_return_value() {
+        let m: Matrix<i32, 2, 2> = Matrix::new([[0, 1], [2, 3]]);
+
+        assert_eq!(m.at(0, 0).unwrap(), 0);
+        assert_eq!(m.at(0, 1).unwrap(), 1);
+        assert_eq!(m.at(1, 0).unwrap(), 2);
+        assert_eq!(m.at(1, 1).unwrap(), 3);
+    }
+
+    #[test]
+    fn matrix_at_case_index_outside_bounds_then_return_none() {
+        let m: Matrix<i32, 2, 2> = Matrix::zeros();
+
+        assert_eq!(m.at(2, 0), None);
+        assert_eq!(m.at(0, 2), None);
+        assert_eq!(m.at(2, 2), None);
+    }
+
+    #[test]
+    fn vector_mdot_case_matrix_then_return_new_vector() {
+        let v: Vector<i32, 3> = Vector::new([1, 2, 3]);
+        let m: Matrix<i32, 3, 2> = Matrix::new([
+            [1, 2],
+            [3, 4],
+            [5, 6],
+        ]);
+
+        let result: Vector<i32, 2> = v.mdot(&m);
+
+        assert_eq!(result.at(0).unwrap(), v.dot(&Vector::new([1, 3, 5])));
+        assert_eq!(result.at(1).unwrap(), v.dot(&Vector::new([2, 4, 6])));
     }
 }
 
