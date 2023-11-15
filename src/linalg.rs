@@ -1,4 +1,6 @@
-use std::ops::{AddAssign, Mul};
+
+
+use std::ops::{Add, AddAssign, Mul, Sub};
 
 pub struct Matrix<T, const N: usize, const M: usize> {
     data: [[T; M]; N],
@@ -55,7 +57,7 @@ impl<T, const N: usize, const M: usize> Matrix<T, N, M>
 
 impl<T, const N: usize> Vector<T, N>
     where
-        T: Copy + Default + AddAssign + Mul<Output=T>
+        T: Copy + Default + AddAssign + Add<Output=T> + Sub<Output=T> + Mul<Output=T> + PartialOrd, f64: From<T>
 {
     pub fn zeros() -> Self {
         Vector { data: [Default::default(); N] }
@@ -79,6 +81,29 @@ impl<T, const N: usize> Vector<T, N>
 
     pub fn size(&self) -> usize {
         N
+    }
+
+    pub fn normalize(&self) -> Vector<f64, N> {
+        let mut result: Vector<f64, N> = Vector { data: [0.; N] };
+
+        let product: f64 = (self.dot(&self)).try_into().expect("Cannot compute square root");
+        let one_over_len = 1./product.sqrt();
+
+        for (i, value) in self.data.iter().enumerate() {
+            result.set(i, f64::from(*value) * one_over_len);
+        }
+
+        result
+    }
+
+    pub fn add(&self, other: &Vector<T, N>) -> Vector<T, N> {
+        let mut result: Vector<T, N> = Vector::zeros();
+
+        for (i, (x, y)) in self.data.iter().zip(other.data.iter()).enumerate() {
+            result.set(i, *x + *y)
+        }
+
+        result
     }
 
     pub fn dot(&self, other: &Vector<T, N>) -> T {
@@ -106,6 +131,16 @@ impl<T, const N: usize> Vector<T, N>
         }
 
         result
+    }
+
+    pub fn approx(&self, other: &Vector<T, N>, eps: T) -> bool{
+        for (x, y) in self.data.iter().zip(other.data.iter()) {
+            if *y - *x > eps {
+                return false;
+            }
+        }
+
+        true
     }
 }
 
@@ -236,6 +271,15 @@ mod test {
             result.at(1, 1).unwrap(),
             Vector::new([4, 5, 6]).dot(&Vector::new([2, 4, 6]))
         );
+    }
+
+    #[test]
+    fn vector_add_always_return_proper_value() {
+        let v1: Vector<i32, 3> = Vector::new([0, 1, 2]);
+        let v2: Vector<i32, 3> = Vector::new([2, 1, 0]);
+        let expected: Vector<i32, 3> = Vector::new([2, 2, 2]);
+
+        assert!(v1.add(&v2).approx(&expected, 0));
     }
 }
 
