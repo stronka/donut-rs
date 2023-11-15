@@ -14,8 +14,8 @@ const R2: f64 = 2.;
 const K2: f64 = 5.;
 const K1: f64 = 1.;
 
-const THETA_STEP: f64 = 0.01;
-const PHI_STEP: f64 = 0.01;
+const THETA_STEP: f64 = 0.07;
+const PHI_STEP: f64 = 0.04;
 
 pub fn render(x_rot: f64, z_rot: f64) {
     let cx = x_rot.cos();
@@ -44,6 +44,7 @@ pub fn render(x_rot: f64, z_rot: f64) {
     );
 
     let mut zbuff: Matrix<f64, SCREEN_WIDTH, SCREEN_HEIGHT> = Matrix::zeros();
+    let mut output: [[char; SCREEN_HEIGHT]; SCREEN_WIDTH] = [[' '; SCREEN_HEIGHT]; SCREEN_WIDTH];
 
     while phi < 2. * PI {
         let cp = phi.cos();
@@ -84,8 +85,31 @@ pub fn render(x_rot: f64, z_rot: f64) {
             let ypi: usize = yp.try_into().unwrap_or(SCREEN_HEIGHT);
 
             if let Some(z_val) = zbuff.at(xpi, ypi) {
-                if z_val < one_over_z {
+                let luminance: f64 = Vector::new(
+                    [ct, st, 0.],
+                ).mdot(
+                    &phi_rotation
+                ).dot(
+                    &Vector::new([0., 1., 1.]).normalize()
+                );
+
+                if z_val < one_over_z && luminance > 0. {
                     zbuff.set(xpi, ypi, one_over_z);
+
+                    let luminance_int: i32 = (luminance * 9.).floor() as i32;
+                    let luminance_index: usize = usize::try_from(luminance_int).unwrap();
+
+                    output[xpi][ypi] = [
+                        '.',
+                        ',',
+                        '-',
+                        '~',
+                        ':',
+                        ';',
+                        '=',
+                        '#',
+                        '@',
+                    ][luminance_index];
                 }
             }
 
@@ -101,18 +125,10 @@ pub fn render(x_rot: f64, z_rot: f64) {
 
     for j in 0..SCREEN_HEIGHT {
         for i in 0..SCREEN_WIDTH {
-            if zbuff.at(i, j).unwrap() > 0. {
-                print!("@");
-            } else {
-                print!("-");
-            }
+            print!("{}", output[i][j]);
         }
 
         print!("\n");
     }
 
-
-    // println!("DEBUG info:");
-    // println!("lmin: {:.4}", lmin);
-    // println!("lmax: {:.4}", lmax);
 }
