@@ -1,5 +1,4 @@
 use std::f64::consts::PI;
-use std::ops::Add;
 
 use linalg::Matrix;
 
@@ -15,8 +14,8 @@ const R2: f64 = 2.;
 const K2: f64 = 5.;
 const K1: f64 = 1.;
 
-const THETA_STEP: f64 = 0.06;
-const PHI_STEP: f64 = 0.05;
+const N_THETA_STEPS: usize = 50;
+const PHI_STEP: f64 = 0.04;
 
 const FLOAT_SCREEN_WIDTH: f64 = SCREEN_WIDTH as f64;
 const FLOAT_SCREEN_HEIGHT: f64 = SCREEN_HEIGHT as f64;
@@ -34,18 +33,12 @@ const LUMINANCE_LEVEL: [char; 9] = [
 ];
 
 
-pub fn render(x_rot: f64, z_rot: f64) {
+pub fn render(x_rot: f64, z_rot: f64, theta_sin_cos: &[(f64, f64); N_THETA_STEPS]) {
     let projection_offset = Vector::new([0., 0., K2]);
     let light_direction = Vector::new([0., 1., 1.]).normalize();
 
-    let cx = x_rot.cos();
-    let cz = z_rot.cos();
-
-    let sx = x_rot.sin();
-    let sz = z_rot.sin();
-
-    let mut theta = -PI;
-    let mut phi = -PI;
+    let (sx, cx) = x_rot.sin_cos();
+    let (sz, cz) = z_rot.sin_cos();
 
     let frame_rotation: Matrix<f64, 3, 3> = Matrix::new(
         [
@@ -66,6 +59,8 @@ pub fn render(x_rot: f64, z_rot: f64) {
     let mut zbuff: Matrix<f64, SCREEN_WIDTH, SCREEN_HEIGHT> = Matrix::zeros();
     let mut output: [[char; SCREEN_WIDTH]; SCREEN_HEIGHT] = [[' '; SCREEN_WIDTH]; SCREEN_HEIGHT];
 
+    let mut phi = -PI;
+
     while phi < PI {
         let (sp, cp) = phi.sin_cos();
 
@@ -78,10 +73,7 @@ pub fn render(x_rot: f64, z_rot: f64) {
         ).dot(&frame_rotation);
 
 
-        while theta < PI {
-            let ct = theta.cos();
-            let st = theta.sin();
-
+        for (st, ct) in theta_sin_cos.iter().copied() {
             let point: Vector<f64, 3> = Vector::new(
                 [
                     R2 + R1 * ct,
@@ -120,15 +112,12 @@ pub fn render(x_rot: f64, z_rot: f64) {
                 let luminance_index: usize = (luminance * 9.).floor() as usize;
                 output[ypi][xpi] = LUMINANCE_LEVEL.get(luminance_index).copied().unwrap();
             }
-
-            theta += THETA_STEP;
         }
 
-        theta = -PI;
         phi += PHI_STEP;
     }
 
-   render_output(&output);
+    render_output(&output);
 }
 
 #[inline]
@@ -141,4 +130,19 @@ fn render_output(output: &[[char; SCREEN_WIDTH]; SCREEN_HEIGHT]) {
     });
 
     print!("\x1b[H{}", frame);
+}
+
+
+pub fn compute_theta_sin_cos() -> [(f64, f64); N_THETA_STEPS] {
+    let mut result = [(0., 0.); N_THETA_STEPS];
+
+    let mut theta = -PI;
+    let step = 2. * PI / (N_THETA_STEPS as f64);
+
+    for i in 0..N_THETA_STEPS {
+        result[i] = theta.sin_cos();
+        theta += step;
+    }
+
+    result
 }

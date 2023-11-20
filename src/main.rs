@@ -1,12 +1,19 @@
 use std::f64::consts::PI;
-use donut_rs::render;
+use std::thread::sleep;
+use std::time::Duration;
+
+use donut_rs::{compute_theta_sin_cos, render};
+
 
 fn main() {
     let mut x_rot = 0.;
     let mut z_rot = 0.;
 
+    let theta_sin_cos = compute_theta_sin_cos();
+
     loop {
-        render(x_rot, z_rot);
+        render(x_rot, z_rot, &theta_sin_cos);
+        sleep(Duration::from_millis(5));
 
         x_rot += 0.03;
         z_rot += 0.01;
@@ -16,7 +23,7 @@ fn main() {
         }
 
         if z_rot > 2. * PI {
-            break;
+            z_rot = 0.;
         }
     }
 }
