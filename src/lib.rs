@@ -17,6 +17,21 @@ const K1: f64 = 1.;
 const THETA_STEP: f64 = 0.07;
 const PHI_STEP: f64 = 0.04;
 
+const FLOAT_SCREEN_WIDTH: f64 = SCREEN_WIDTH as f64;
+const FLOAT_SCREEN_HEIGHT: f64 = SCREEN_HEIGHT as f64;
+
+const LUMINANCE_LEVEL: [char; 9] = [
+    '.',
+    ',',
+    '-',
+    '~',
+    ':',
+    ';',
+    '=',
+    '#',
+    '@',
+];
+
 pub fn render(x_rot: f64, z_rot: f64) {
     let cx = x_rot.cos();
     let cz = z_rot.cos();
@@ -79,8 +94,8 @@ pub fn render(x_rot: f64, z_rot: f64) {
 
             let one_over_z = point.at(2).unwrap();
 
-            let xp: i32 = (SCREEN_WIDTH as f64 / 2. + K1 * point.at(0).unwrap() * one_over_z).round() as i32;
-            let yp: i32 = (SCREEN_HEIGHT as f64 / 2. - K1 * point.at(1).unwrap() * one_over_z).round() as i32;
+            let xp: i32 = (FLOAT_SCREEN_WIDTH / 2. + K1 * point.at(0).unwrap() * one_over_z).round() as i32;
+            let yp: i32 = (FLOAT_SCREEN_HEIGHT / 2. - K1 * point.at(1).unwrap() * one_over_z).round() as i32;
             let xpi: usize = xp.try_into().unwrap_or(SCREEN_WIDTH);
             let ypi: usize = yp.try_into().unwrap_or(SCREEN_HEIGHT);
 
@@ -99,17 +114,7 @@ pub fn render(x_rot: f64, z_rot: f64) {
                     let luminance_int: i32 = (luminance * 9.).floor() as i32;
                     let luminance_index: usize = usize::try_from(luminance_int).unwrap();
 
-                    output[xpi][ypi] = [
-                        '.',
-                        ',',
-                        '-',
-                        '~',
-                        ':',
-                        ';',
-                        '=',
-                        '#',
-                        '@',
-                    ][luminance_index];
+                    output[xpi][ypi] = LUMINANCE_LEVEL[luminance_index];
                 }
             }
 
@@ -130,5 +135,4 @@ pub fn render(x_rot: f64, z_rot: f64) {
 
         print!("\n");
     }
-
 }
