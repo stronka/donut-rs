@@ -63,7 +63,7 @@ pub fn render(x_rot: f64, z_rot: f64) {
     );
 
     let mut zbuff: Matrix<f64, SCREEN_WIDTH, SCREEN_HEIGHT> = Matrix::zeros();
-    let mut output: [[char; SCREEN_HEIGHT]; SCREEN_WIDTH] = [[' '; SCREEN_HEIGHT]; SCREEN_WIDTH];
+    let mut output: [[char; SCREEN_WIDTH]; SCREEN_HEIGHT] = [[' '; SCREEN_WIDTH]; SCREEN_HEIGHT];
 
     while phi < 2. * PI {
         let cp = phi.cos();
@@ -118,7 +118,7 @@ pub fn render(x_rot: f64, z_rot: f64) {
                 zbuff.set(xpi, ypi, one_over_z);
 
                 let luminance_index: usize = (luminance * 9.).floor() as usize;
-                output[xpi][ypi] = LUMINANCE_LEVEL.get(luminance_index).copied().unwrap();
+                output[ypi][xpi] = LUMINANCE_LEVEL.get(luminance_index).copied().unwrap();
             }
 
             theta += THETA_STEP;
@@ -131,14 +131,10 @@ pub fn render(x_rot: f64, z_rot: f64) {
    render_output(&output);
 }
 
-fn render_output(output: &[[char; SCREEN_HEIGHT]; SCREEN_WIDTH]) {
+fn render_output(output: &[[char; SCREEN_WIDTH]; SCREEN_HEIGHT]) {
     print!("\x1b[H");
 
-    for j in 0..SCREEN_HEIGHT {
-        for i in 0..SCREEN_WIDTH {
-            print!("{}", output[i][j]);
-        }
-
-        print!("\n");
+    for row in output.iter().take(SCREEN_HEIGHT) {
+        println!("{}", String::from_iter(row.iter()));
     }
 }

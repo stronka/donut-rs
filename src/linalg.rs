@@ -86,7 +86,7 @@ impl<T, const N: usize> Vector<T, N>
     pub fn normalize(&self) -> Vector<f64, N> {
         let mut result: Vector<f64, N> = Vector { data: [0.; N] };
 
-        let product: f64 = (self.dot(&self)).try_into().expect("Cannot compute square root");
+        let product: f64 = (self.dot(self)).try_into().expect("Cannot compute square root");
         let one_over_len = 1./product.sqrt();
 
         for (i, value) in self.data.iter().enumerate() {
