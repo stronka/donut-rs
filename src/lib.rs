@@ -14,8 +14,8 @@ const R2: f64 = 2.;
 const K2: f64 = 5.;
 const K1: f64 = 1.;
 
-const THETA_STEP: f64 = 0.07;
-const PHI_STEP: f64 = 0.04;
+const THETA_STEP: f64 = 0.06;
+const PHI_STEP: f64 = 0.05;
 
 const FLOAT_SCREEN_WIDTH: f64 = SCREEN_WIDTH as f64;
 const FLOAT_SCREEN_HEIGHT: f64 = SCREEN_HEIGHT as f64;
@@ -31,7 +31,6 @@ const LUMINANCE_LEVEL: [char; 9] = [
     '#',
     '@',
 ];
-
 
 
 pub fn render(x_rot: f64, z_rot: f64) {
@@ -102,21 +101,24 @@ pub fn render(x_rot: f64, z_rot: f64) {
             let xpi: usize = xp.try_into().unwrap_or(SCREEN_WIDTH);
             let ypi: usize = yp.try_into().unwrap_or(SCREEN_HEIGHT);
 
-            if let Some(z_val) = zbuff.at(xpi, ypi) {
-                let luminance: f64 = Vector::new(
+            let z_val = zbuff.at(xpi, ypi).unwrap_or(1e3);
+            let mut luminance: f64 = -1.;
+
+            if z_val < one_over_z {
+                luminance = Vector::new(
                     [ct, st, 0.],
                 ).mdot(
                     &phi_rotation
                 ).dot(
                     &light_direction
                 );
+            }
 
-                if z_val < one_over_z && luminance > 0. {
-                    zbuff.set(xpi, ypi, one_over_z);
+            if luminance > 0. {
+                zbuff.set(xpi, ypi, one_over_z);
 
-                    let luminance_index: usize = (luminance * 9.).floor() as usize;
-                    output[xpi][ypi] = LUMINANCE_LEVEL.get(luminance_index).copied().unwrap();
-                }
+                let luminance_index: usize = (luminance * 9.).floor() as usize;
+                output[xpi][ypi] = LUMINANCE_LEVEL.get(luminance_index).copied().unwrap();
             }
 
             theta += THETA_STEP;
@@ -126,7 +128,10 @@ pub fn render(x_rot: f64, z_rot: f64) {
         phi += PHI_STEP;
     }
 
+   render_output(&output);
+}
 
+fn render_output(output: &[[char; SCREEN_HEIGHT]; SCREEN_WIDTH]) {
     print!("\x1b[H");
 
     for j in 0..SCREEN_HEIGHT {
