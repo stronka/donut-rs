@@ -32,7 +32,11 @@ const LUMINANCE_LEVEL: [char; 9] = [
     '@',
 ];
 
+
+
 pub fn render(x_rot: f64, z_rot: f64) {
+    let projection_offset = Vector::new([0., 0., K2]);
+
     let cx = x_rot.cos();
     let cz = z_rot.cos();
 
@@ -87,9 +91,7 @@ pub fn render(x_rot: f64, z_rot: f64) {
             ).mdot(
                 &phi_rotation
             ).add(
-                &Vector::new(
-                    [0., 0., K2],
-                )
+                &projection_offset
             );
 
             let one_over_z = point.at(2).unwrap();
