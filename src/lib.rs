@@ -36,6 +36,7 @@ const LUMINANCE_LEVEL: [char; 9] = [
 
 pub fn render(x_rot: f64, z_rot: f64) {
     let projection_offset = Vector::new([0., 0., K2]);
+    let light_direction = Vector::new([0., 1., 1.]).normalize();
 
     let cx = x_rot.cos();
     let cz = z_rot.cos();
@@ -107,16 +108,14 @@ pub fn render(x_rot: f64, z_rot: f64) {
                 ).mdot(
                     &phi_rotation
                 ).dot(
-                    &Vector::new([0., 1., 1.]).normalize()
+                    &light_direction
                 );
 
                 if z_val < one_over_z && luminance > 0. {
                     zbuff.set(xpi, ypi, one_over_z);
 
-                    let luminance_int: i32 = (luminance * 9.).floor() as i32;
-                    let luminance_index: usize = usize::try_from(luminance_int).unwrap();
-
-                    output[xpi][ypi] = LUMINANCE_LEVEL[luminance_index];
+                    let luminance_index: usize = (luminance * 9.).floor() as usize;
+                    output[xpi][ypi] = LUMINANCE_LEVEL.get(luminance_index).copied().unwrap();
                 }
             }
 
