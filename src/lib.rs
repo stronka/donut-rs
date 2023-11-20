@@ -1,4 +1,5 @@
 use std::f64::consts::PI;
+use std::ops::Add;
 
 use linalg::Matrix;
 
@@ -43,8 +44,8 @@ pub fn render(x_rot: f64, z_rot: f64) {
     let sx = x_rot.sin();
     let sz = z_rot.sin();
 
-    let mut theta = 0.0;
-    let mut phi = 0.0;
+    let mut theta = -PI;
+    let mut phi = -PI;
 
     let frame_rotation: Matrix<f64, 3, 3> = Matrix::new(
         [
@@ -65,9 +66,8 @@ pub fn render(x_rot: f64, z_rot: f64) {
     let mut zbuff: Matrix<f64, SCREEN_WIDTH, SCREEN_HEIGHT> = Matrix::zeros();
     let mut output: [[char; SCREEN_WIDTH]; SCREEN_HEIGHT] = [[' '; SCREEN_WIDTH]; SCREEN_HEIGHT];
 
-    while phi < 2. * PI {
-        let cp = phi.cos();
-        let sp = phi.sin();
+    while phi < PI {
+        let (sp, cp) = phi.sin_cos();
 
         let phi_rotation: Matrix<f64, 3, 3> = Matrix::new(
             [
@@ -78,7 +78,7 @@ pub fn render(x_rot: f64, z_rot: f64) {
         ).dot(&frame_rotation);
 
 
-        while theta < 2. * PI {
+        while theta < PI {
             let ct = theta.cos();
             let st = theta.sin();
 
@@ -124,17 +124,21 @@ pub fn render(x_rot: f64, z_rot: f64) {
             theta += THETA_STEP;
         }
 
-        theta = 0.;
+        theta = -PI;
         phi += PHI_STEP;
     }
 
    render_output(&output);
 }
 
+#[inline]
 fn render_output(output: &[[char; SCREEN_WIDTH]; SCREEN_HEIGHT]) {
-    print!("\x1b[H");
+    let mut frame: String = String::new();
 
-    for row in output.iter().take(SCREEN_HEIGHT) {
-        println!("{}", String::from_iter(row.iter()));
-    }
+    output.iter().for_each(|row| {
+        row.iter().for_each(|c| frame.push(*c));
+        frame.push('\n');
+    });
+
+    print!("\x1b[H{}", frame);
 }

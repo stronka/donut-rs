@@ -16,7 +16,7 @@ fn main() {
         }
 
         if z_rot > 2. * PI {
-            z_rot = 0.;
+            break;
         }
     }
 }
