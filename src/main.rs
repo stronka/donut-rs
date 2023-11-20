@@ -10,7 +10,6 @@ fn main() {
 
     loop {
         render(x_rot, z_rot);
-        // sleep(Duration::from_millis(10));
 
         x_rot += 0.03;
         z_rot += 0.01;
