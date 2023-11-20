@@ -1,7 +1,4 @@
 use std::f64::consts::PI;
-use std::thread::sleep;
-use std::time::Duration;
-
 use donut_rs::render;
 
 fn main() {
